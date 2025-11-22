@@ -1,0 +1,140 @@
+# Windows Hosts File Manager - .gitignore
+# Generated for myTech.Today PowerShell Scripts
+
+# ============================================
+# Backup Files
+# ============================================
+# Hosts file backups created by the script
+backups/
+*.backup.*
+hosts.backup.*
+
+# ============================================
+# Log Files
+# ============================================
+# myTech.Today logging module output
+logs/
+*.log
+*.log.*
+
+# ============================================
+# PowerShell Specific
+# ============================================
+# PowerShell module cache
+PSGetModuleInfo.xml
+
+# PowerShell Gallery cache
+.PSGallery/
+
+# PowerShell debugging
+*.ps1xml
+
+# ============================================
+# Windows System Files
+# ============================================
+# Windows thumbnail cache
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+
+# Windows folder config
+Desktop.ini
+desktop.ini
+
+# Windows Recycle Bin
+$RECYCLE.BIN/
+
+# Windows shortcuts
+*.lnk
+
+# ============================================
+# IDE and Editor Files
+# ============================================
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# JetBrains IDEs (Rider, IntelliJ, etc.)
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Notepad++
+*.bak
+
+# ============================================
+# macOS Files
+# ============================================
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ============================================
+# Temporary Files
+# ============================================
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Test files
+test/
+tests/
+*.test.ps1
+
+# ============================================
+# Environment and Configuration
+# ============================================
+# Environment variables
+.env
+.env.local
+
+# Local configuration
+config.local.ps1
+settings.local.json
+
+# ============================================
+# Output and Build Artifacts
+# ============================================
+# Output directories
+output/
+bin/
+obj/
+dist/
+
+# Compiled files
+*.dll
+*.exe
+*.pdb
+
+# ============================================
+# Package Management
+# ============================================
+# NuGet packages
+packages/
+*.nupkg
+
+# ============================================
+# Documentation Build
+# ============================================
+# Generated documentation
+docs/_build/
+docs/.doctrees/
+
+# ============================================
+# Custom Exclusions
+# ============================================
+# Add your custom exclusions below
+# Example: my-custom-file.txt
+

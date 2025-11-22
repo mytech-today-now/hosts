@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows Hosts File Manager - myTech.Today</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0078d4;
+            border-bottom: 3px solid #0078d4;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #0078d4;
+            margin-top: 30px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #333;
+            margin-top: 20px;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            color: #c7254e;
+        }
+        pre {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 4px solid #0078d4;
+        }
+        pre code {
+            background-color: transparent;
+            color: #d4d4d4;
+            padding: 0;
+        }
+        .feature-list {
+            background-color: #f9f9f9;
+            padding: 15px 15px 15px 35px;
+            border-left: 4px solid #28a745;
+            margin: 15px 0;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #0078d4;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .badge-version {
+            background-color: #28a745;
+            color: white;
+        }
+        .badge-powershell {
+            background-color: #0078d4;
+            color: white;
+        }
+        .badge-admin {
+            background-color: #dc3545;
+            color: white;
+        }
+        a {
+            color: #0078d4;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ Windows Hosts File Manager</h1>
+        
+        <p>
+            <span class="badge badge-version">v1.0.0</span>
+            <span class="badge badge-powershell">PowerShell 5.1+</span>
+            <span class="badge badge-admin">Requires Admin</span>
+        </p>
+
+        <p>A PowerShell script that automates ad-blocking and malware protection by managing the Windows hosts file. Downloads blocking rules from <a href="https://someonewhocares.org/hosts/hosts" target="_blank">someonewhocares.org</a> while preserving your custom host entries.</p>
+
+        <h2>✨ Features</h2>
+        <div class="feature-list">
+            <ul>
+                <li><strong>Automated Ad-Blocking:</strong> Downloads and applies thousands of ad/malware blocking rules</li>
+                <li><strong>Preserves Custom Entries:</strong> Automatically detects and preserves your custom host entries</li>
+                <li><strong>Automatic Backups:</strong> Creates timestamped backups before any changes</li>
+                <li><strong>Smart Updates:</strong> Detects if hosts file is already up-to-date to avoid unnecessary changes</li>
+                <li><strong>Backup Management:</strong> Keeps last 10 backups, automatically removes older ones</li>
+                <li><strong>DNS Cache Flushing:</strong> Automatically flushes DNS cache to apply changes immediately</li>
+                <li><strong>Comprehensive Logging:</strong> Follows myTech.Today logging standards with monthly rotation</li>
+                <li><strong>WhatIf Support:</strong> Preview changes before applying them</li>
+                <li><strong>Restore Capability:</strong> Easy restoration from any backup</li>
+            </ul>
+        </div>
+
+        <h2>📋 Requirements</h2>
+        <ul>
+            <li>Windows Operating System</li>
+            <li>PowerShell 5.1 or later</li>
+            <li>Administrator privileges</li>
+            <li>Internet connection (for downloading blocking rules)</li>
+        </ul>
+
+        <h2>🚀 Installation</h2>
+        <ol>
+            <li>Download <code>hosts.ps1</code> to your preferred location</li>
+            <li>Open PowerShell as Administrator</li>
+            <li>Navigate to the script directory</li>
+            <li>Run the script (see Usage section below)</li>
+        </ol>
+
+        <div class="warning">
+            <strong>⚠️ Important:</strong> This script requires Administrator privileges to modify the Windows hosts file. Always run PowerShell as Administrator.
+        </div>
+
+        <h2>📖 Usage</h2>
+
+        <h3>Basic Update</h3>
+        <pre><code>.\hosts.ps1</code></pre>
+        <p>Downloads latest blocking rules and updates the hosts file while preserving custom entries.</p>
+
+        <h3>Preview Changes (WhatIf)</h3>
+        <pre><code>.\hosts.ps1 -WhatIf</code></pre>
+        <p>Shows what changes would be made without actually applying them.</p>
+
+        <h3>Force Update</h3>
+        <pre><code>.\hosts.ps1 -Force</code></pre>
+        <p>Forces update even if the hosts file is already up-to-date. Skips confirmation prompts.</p>
+
+        <h3>Backup Only</h3>
+        <pre><code>.\hosts.ps1 -BackupOnly</code></pre>
+        <p>Creates a backup of the current hosts file without making any changes.</p>
+
+        <h3>Restore from Latest Backup</h3>
+        <pre><code>.\hosts.ps1 -RestoreBackup</code></pre>
+        <p>Restores the hosts file from the most recent backup.</p>
+
+        <h3>Restore from Specific Backup</h3>
+        <pre><code>.\hosts.ps1 -RestoreBackup -BackupPath "C:\Users\YourName\myTech.Today\hosts\backups\hosts.backup.2025-01-21_143022"</code></pre>
+        <p>Restores the hosts file from a specific backup file.</p>
+
+        <h3>Skip DNS Flush</h3>
+        <pre><code>.\hosts.ps1 -SkipDNSFlush</code></pre>
+        <p>Updates the hosts file but skips flushing the DNS cache.</p>
+
+        <h2>⚙️ Parameters</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>-BackupOnly</code></td>
+                    <td>Switch</td>
+                    <td>Creates backup of current hosts file without updating</td>
+                </tr>
+                <tr>
+                    <td><code>-RestoreBackup</code></td>
+                    <td>Switch</td>
+                    <td>Restores hosts file from most recent backup</td>
+                </tr>
+                <tr>
+                    <td><code>-BackupPath</code></td>
+                    <td>String</td>
+                    <td>Specific backup file to restore (used with -RestoreBackup)</td>
+                </tr>
+                <tr>
+                    <td><code>-SkipDNSFlush</code></td>
+                    <td>Switch</td>
+                    <td>Skip DNS cache flush after updating hosts file</td>
+                </tr>
+                <tr>
+                    <td><code>-Force</code></td>
+                    <td>Switch</td>
+                    <td>Skip confirmation prompts and bypass up-to-date check</td>
+                </tr>
+                <tr>
+                    <td><code>-WhatIf</code></td>
+                    <td>Switch</td>
+                    <td>Preview changes without applying them</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>📁 File Locations</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Windows Hosts File</td>
+                    <td><code>C:\Windows\System32\drivers\etc\hosts</code></td>
+                </tr>
+                <tr>
+                    <td>Backup Directory</td>
+                    <td><code>%USERPROFILE%\myTech.Today\hosts\backups</code></td>
+                </tr>
+                <tr>
+                    <td>Log Files</td>
+                    <td><code>%USERPROFILE%\myTech.Today\logs</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>🔍 How It Works</h2>
+        <ol>
+            <li><strong>Administrator Check:</strong> Verifies script is running with admin privileges</li>
+            <li><strong>Backup Creation:</strong> Creates timestamped backup of current hosts file</li>
+            <li><strong>Download Rules:</strong> Downloads latest blocking rules from someonewhocares.org</li>
+            <li><strong>Up-to-Date Check:</strong> Compares downloaded rules with current hosts file</li>
+            <li><strong>Extract Custom Entries:</strong> Identifies and preserves your custom host entries</li>
+            <li><strong>Merge Content:</strong> Combines blocking rules with custom entries</li>
+            <li><strong>Update Hosts File:</strong> Writes merged content to Windows hosts file</li>
+            <li><strong>Flush DNS Cache:</strong> Applies changes immediately by flushing DNS cache</li>
+            <li><strong>Cleanup:</strong> Removes old backups (keeps last 10)</li>
+        </ol>
+
+        <h2>📝 Custom Host Entries</h2>
+        <p>The script automatically preserves custom host entries. Custom entries are identified as:</p>
+        <ul>
+            <li>Entries marked with the custom section marker</li>
+            <li>Entries that don't originate from someonewhocares.org</li>
+            <li>User-added IP address mappings</li>
+        </ul>
+
+        <div class="info">
+            <strong>💡 Tip:</strong> Your custom entries will be preserved in a dedicated section marked with:<br>
+            <code># === Custom Host Entries (Preserved by myTech.Today hosts.ps1) ===</code>
+        </div>
+
+        <h2>🔄 Backup Management</h2>
+        <ul>
+            <li>Backups are created automatically before any changes</li>
+            <li>Backup files are timestamped: <code>hosts.backup.YYYY-MM-DD_HHMMSS</code></li>
+            <li>Last 10 backups are retained automatically</li>
+            <li>Older backups are automatically removed</li>
+            <li>Backups can be restored at any time</li>
+        </ul>
+
+        <h2>📊 Logging</h2>
+        <p>The script uses the myTech.Today centralized logging module:</p>
+        <ul>
+            <li>Logs are stored in <code>%USERPROFILE%\myTech.Today\logs</code></li>
+            <li>Monthly log rotation (format: <code>hosts_YYYY-MM.log</code>)</li>
+            <li>Comprehensive logging of all operations</li>
+            <li>Error tracking and debugging information</li>
+        </ul>
+
+        <h2>⚠️ Important Notes</h2>
+        <div class="warning">
+            <ul>
+                <li><strong>Administrator Rights:</strong> This script MUST be run as Administrator</li>
+                <li><strong>Antivirus:</strong> Some antivirus software may flag hosts file modifications</li>
+                <li><strong>Backup First:</strong> Always ensure backups are created before making changes</li>
+                <li><strong>Internet Required:</strong> Active internet connection needed to download blocking rules</li>
+                <li><strong>DNS Cache:</strong> Changes take effect immediately after DNS cache flush</li>
+            </ul>
+        </div>
+
+        <h2>🐛 Troubleshooting</h2>
+        <h3>Script Won't Run</h3>
+        <ul>
+            <li>Ensure PowerShell is running as Administrator</li>
+            <li>Check PowerShell execution policy: <code>Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</code></li>
+        </ul>
+
+        <h3>Changes Not Taking Effect</h3>
+        <ul>
+            <li>Manually flush DNS: <code>ipconfig /flushdns</code></li>
+            <li>Restart your browser</li>
+            <li>Clear browser cache</li>
+        </ul>
+
+        <h3>Restore Not Working</h3>
+        <ul>
+            <li>Verify backup files exist in backup directory</li>
+            <li>Ensure running as Administrator</li>
+            <li>Check log files for detailed error messages</li>
+        </ul>
+
+        <h2>📜 License & Author</h2>
+        <p>
+            <strong>Author:</strong> myTech.Today<br>
+            <strong>Version:</strong> 1.0.0<br>
+            <strong>Date Created:</strong> 2025-11-21<br>
+            <strong>Repository:</strong> <a href="https://github.com/mytech-today-now/PowerShellScripts" target="_blank">GitHub - PowerShellScripts</a>
+        </p>
+
+        <h2>🔗 Links</h2>
+        <ul>
+            <li><a href="https://someonewhocares.org/hosts/hosts" target="_blank">Blocking Rules Source (someonewhocares.org)</a></li>
+            <li><a href="https://github.com/mytech-today-now/PowerShellScripts" target="_blank">GitHub Repository</a></li>
+            <li><a href="https://github.com/mytech-today-now/scripts" target="_blank">Logging Module</a></li>
+        </ul>
+
+        <hr style="margin: 30px 0; border: none; border-top: 2px solid #ddd;">
+
+        <p style="text-align: center; color: #666; font-size: 0.9em;">
+            <strong>myTech.Today</strong> | Windows Hosts File Manager v1.0.0<br>
+            Last Updated: 2025-11-21
+        </p>
+    </div>
+</body>
+</html>
+
