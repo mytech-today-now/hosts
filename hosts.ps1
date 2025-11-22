@@ -68,7 +68,7 @@
     1.0.0 - Initial release
 
 .LINK
-    https://github.com/mytech-today-now/PowerShellScripts
+    https://github.com/mytech-today-now/hosts/
 #>
 
 [CmdletBinding(SupportsShouldProcess=$true)]
