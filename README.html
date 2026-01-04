@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows Hosts File Manager - myTech.Today</title>
+    <title>Hosts File Manager - myTech.Today</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -120,25 +120,35 @@
 </head>
 <body>
     <div class="container">
-        <h1>🛡️ Windows Hosts File Manager</h1>
-        
+        <h1>🛡️ Hosts File Manager</h1>
+
         <p>
-            <span class="badge badge-version">v1.0.0</span>
-            <span class="badge badge-powershell">PowerShell 5.1+</span>
-            <span class="badge badge-admin">Requires Admin</span>
+            <span class="badge badge-version">v2.0.0</span>
+            <span class="badge badge-powershell">PowerShell 7.0+</span>
+            <span class="badge badge-admin">Requires Elevated Privileges</span>
         </p>
 
-        <p>A PowerShell script that automates ad-blocking and malware protection by managing the Windows hosts file. Downloads blocking rules from <a href="https://someonewhocares.org/hosts/hosts" target="_blank">someonewhocares.org</a> while preserving your custom host entries.</p>
+        <p>A cross-platform PowerShell script that automates ad-blocking and malware protection by managing the system hosts file. Downloads blocking rules from <a href="https://someonewhocares.org/hosts/hosts" target="_blank">someonewhocares.org</a> while preserving your custom host entries.</p>
+
+        <div class="info">
+            <strong>🌐 Cross-Platform Support:</strong><br>
+            <ul style="margin-bottom: 0;">
+                <li><strong>Windows:</strong> <code>C:\Windows\System32\drivers\etc\hosts</code></li>
+                <li><strong>macOS:</strong> <code>/etc/hosts</code></li>
+                <li><strong>Linux:</strong> <code>/etc/hosts</code></li>
+            </ul>
+        </div>
 
         <h2>✨ Features</h2>
         <div class="feature-list">
             <ul>
+                <li><strong>Cross-Platform Compatibility:</strong> Works on Windows, macOS, and Linux</li>
                 <li><strong>Automated Ad-Blocking:</strong> Downloads and applies thousands of ad/malware blocking rules</li>
                 <li><strong>Preserves Custom Entries:</strong> Automatically detects and preserves your custom host entries</li>
                 <li><strong>Automatic Backups:</strong> Creates timestamped backups before any changes</li>
                 <li><strong>Smart Updates:</strong> Detects if hosts file is already up-to-date to avoid unnecessary changes</li>
                 <li><strong>Backup Management:</strong> Keeps last 10 backups, automatically removes older ones</li>
-                <li><strong>DNS Cache Flushing:</strong> Automatically flushes DNS cache to apply changes immediately</li>
+                <li><strong>DNS Cache Flushing:</strong> Platform-specific DNS cache flush (ipconfig, dscacheutil, systemd-resolve)</li>
                 <li><strong>Comprehensive Logging:</strong> Follows myTech.Today logging standards with monthly rotation</li>
                 <li><strong>WhatIf Support:</strong> Preview changes before applying them</li>
                 <li><strong>Restore Capability:</strong> Easy restoration from any backup</li>
@@ -147,22 +157,31 @@
 
         <h2>📋 Requirements</h2>
         <ul>
-            <li>Windows Operating System</li>
-            <li>PowerShell 5.1 or later</li>
-            <li>Administrator privileges</li>
+            <li><strong>PowerShell 7.0 or later</strong> (PowerShell Core) - <a href="https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell" target="_blank">Install PowerShell</a></li>
+            <li>Elevated privileges:
+                <ul>
+                    <li><strong>Windows:</strong> Run PowerShell as Administrator</li>
+                    <li><strong>macOS/Linux:</strong> Run with <code>sudo pwsh</code> or as root</li>
+                </ul>
+            </li>
             <li>Internet connection (for downloading blocking rules)</li>
         </ul>
 
         <h2>🚀 Installation</h2>
         <ol>
             <li>Download <code>hosts.ps1</code> to your preferred location</li>
-            <li>Open PowerShell as Administrator</li>
+            <li>Open PowerShell with elevated privileges:
+                <ul>
+                    <li><strong>Windows:</strong> Run PowerShell as Administrator</li>
+                    <li><strong>macOS/Linux:</strong> Run <code>sudo pwsh</code></li>
+                </ul>
+            </li>
             <li>Navigate to the script directory</li>
             <li>Run the script (see Usage section below)</li>
         </ol>
 
         <div class="warning">
-            <strong>⚠️ Important:</strong> This script requires Administrator privileges to modify the Windows hosts file. Always run PowerShell as Administrator.
+            <strong>⚠️ Important:</strong> This script requires elevated privileges to modify the hosts file. On Windows, run as Administrator. On macOS/Linux, use <code>sudo pwsh</code>.
         </div>
 
         <h2>📖 Usage</h2>
@@ -239,39 +258,64 @@
         </table>
 
         <h2>📁 File Locations</h2>
+        <h3>Hosts File</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Item</th>
-                    <th>Location</th>
+                    <th>Platform</th>
+                    <th>Path</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Windows Hosts File</td>
+                    <td>Windows</td>
                     <td><code>C:\Windows\System32\drivers\etc\hosts</code></td>
                 </tr>
                 <tr>
-                    <td>Backup Directory</td>
-                    <td><code>%USERPROFILE%\myTech.Today\hosts\backups</code></td>
+                    <td>macOS</td>
+                    <td><code>/etc/hosts</code></td>
                 </tr>
                 <tr>
-                    <td>Log Files</td>
-                    <td><code>%USERPROFILE%\myTech.Today\logs</code></td>
+                    <td>Linux</td>
+                    <td><code>/etc/hosts</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Backups and Logs</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Platform</th>
+                    <th>Backups</th>
+                    <th>Logs</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Windows</td>
+                    <td><code>%USERPROFILE%\myTech.Today\hosts\backups\</code></td>
+                    <td><code>%USERPROFILE%\myTech.Today\logs\</code></td>
+                </tr>
+                <tr>
+                    <td>macOS/Linux</td>
+                    <td><code>~/myTech.Today/hosts/backups/</code></td>
+                    <td><code>~/myTech.Today/logs/</code></td>
                 </tr>
             </tbody>
         </table>
 
         <h2>🔍 How It Works</h2>
         <ol>
-            <li><strong>Administrator Check:</strong> Verifies script is running with admin privileges</li>
+            <li><strong>Platform Detection:</strong> Automatically detects Windows, macOS, or Linux</li>
+            <li><strong>Privilege Check:</strong> Verifies script is running with elevated privileges</li>
             <li><strong>Backup Creation:</strong> Creates timestamped backup of current hosts file</li>
             <li><strong>Download Rules:</strong> Downloads latest blocking rules from someonewhocares.org</li>
             <li><strong>Up-to-Date Check:</strong> Compares downloaded rules with current hosts file</li>
             <li><strong>Extract Custom Entries:</strong> Identifies and preserves your custom host entries</li>
             <li><strong>Merge Content:</strong> Combines blocking rules with custom entries</li>
-            <li><strong>Update Hosts File:</strong> Writes merged content to Windows hosts file</li>
-            <li><strong>Flush DNS Cache:</strong> Applies changes immediately by flushing DNS cache</li>
+            <li><strong>Update Hosts File:</strong> Writes merged content to system hosts file</li>
+            <li><strong>Flush DNS Cache:</strong> Platform-specific DNS flush to apply changes</li>
             <li><strong>Cleanup:</strong> Removes old backups (keeps last 10)</li>
         </ol>
 
@@ -309,7 +353,7 @@
         <h2>⚠️ Important Notes</h2>
         <div class="warning">
             <ul>
-                <li><strong>Administrator Rights:</strong> This script MUST be run as Administrator</li>
+                <li><strong>Elevated Privileges:</strong> This script MUST be run with elevated privileges (Administrator on Windows, root on macOS/Linux)</li>
                 <li><strong>Antivirus:</strong> Some antivirus software may flag hosts file modifications</li>
                 <li><strong>Backup First:</strong> Always ensure backups are created before making changes</li>
                 <li><strong>Internet Required:</strong> Active internet connection needed to download blocking rules</li>
@@ -320,13 +364,16 @@
         <h2>🐛 Troubleshooting</h2>
         <h3>Script Won't Run</h3>
         <ul>
-            <li>Ensure PowerShell is running as Administrator</li>
+            <li><strong>Windows:</strong> Ensure PowerShell is running as Administrator</li>
+            <li><strong>macOS/Linux:</strong> Run with <code>sudo pwsh</code></li>
             <li>Check PowerShell execution policy: <code>Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</code></li>
         </ul>
 
         <h3>Changes Not Taking Effect</h3>
         <ul>
-            <li>Manually flush DNS: <code>ipconfig /flushdns</code></li>
+            <li><strong>Windows:</strong> <code>ipconfig /flushdns</code></li>
+            <li><strong>macOS:</strong> <code>sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder</code></li>
+            <li><strong>Linux:</strong> <code>sudo systemd-resolve --flush-caches</code> or <code>sudo resolvectl flush-caches</code></li>
             <li>Restart your browser</li>
             <li>Clear browser cache</li>
         </ul>
@@ -334,20 +381,22 @@
         <h3>Restore Not Working</h3>
         <ul>
             <li>Verify backup files exist in backup directory</li>
-            <li>Ensure running as Administrator</li>
+            <li>Ensure running with elevated privileges</li>
             <li>Check log files for detailed error messages</li>
         </ul>
 
         <h2>📜 License & Author</h2>
         <p>
             <strong>Author:</strong> myTech.Today<br>
-            <strong>Version:</strong> 1.0.0<br>
+            <strong>Version:</strong> 2.0.0<br>
             <strong>Date Created:</strong> 2025-11-21<br>
+            <strong>Platforms:</strong> Windows, macOS, Linux<br>
             <strong>Repository:</strong> <a href="https://github.com/mytech-today-now/PowerShellScripts" target="_blank">GitHub - PowerShellScripts</a>
         </p>
 
         <h2>🔗 Links</h2>
         <ul>
+            <li><a href="https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell" target="_blank">Install PowerShell 7</a></li>
             <li><a href="https://someonewhocares.org/hosts/hosts" target="_blank">Blocking Rules Source (someonewhocares.org)</a></li>
             <li><a href="https://github.com/mytech-today-now/PowerShellScripts" target="_blank">GitHub Repository</a></li>
             <li><a href="https://github.com/mytech-today-now/scripts" target="_blank">Logging Module</a></li>
@@ -356,10 +405,10 @@
         <hr style="margin: 30px 0; border: none; border-top: 2px solid #ddd;">
 
         <p style="text-align: center; color: #666; font-size: 0.9em;">
-            <strong>myTech.Today</strong> | Windows Hosts File Manager v1.0.0<br>
-            Last Updated: 2025-11-21
+            <strong>myTech.Today</strong> | Hosts File Manager v2.0.0<br>
+            Cross-Platform: Windows, macOS, Linux<br>
+            Last Updated: 2025-12-14
         </p>
     </div>
 </body>
 </html>
-

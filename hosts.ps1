@@ -1,18 +1,22 @@
 <#
 .SYNOPSIS
-    Add additional host rules to the Windows hosts file by downloading and merging ad-blocking rules.
+    Add additional host rules to the system hosts file by downloading and merging ad-blocking rules.
 
 .DESCRIPTION
-    This script manages the Windows hosts file by downloading ad-blocking/malware-blocking rules
+    This script manages the system hosts file by downloading ad-blocking/malware-blocking rules
     from https://someonewhocares.org/hosts/hosts while preserving existing custom host entries.
-    
+
+    Cross-Platform Support:
+    - Windows: Uses $env:WINDIR\System32\drivers\etc\hosts (requires Administrator)
+    - macOS/Linux: Uses /etc/hosts (requires root/sudo)
+
     The script will:
-    - Require Administrator privileges
+    - Require elevated privileges (Administrator on Windows, root on macOS/Linux)
     - Backup existing hosts file with timestamped backups
     - Download current blocking rules from someonewhocares.org
     - Preserve custom entries from the current hosts file
     - Merge downloaded rules with custom entries
-    - Update the Windows hosts file
+    - Update the system hosts file
     - Flush DNS cache to apply changes immediately
     - Log all operations following myTech.Today standards
 
@@ -52,20 +56,26 @@
     Restore from most recent backup.
 
 .EXAMPLE
+    # Windows:
     .\hosts.ps1 -RestoreBackup -BackupPath "C:\Users\Kyle\myTech.Today\hosts\backups\hosts.backup.2025-01-21_143022"
+    # macOS/Linux:
+    .\hosts.ps1 -RestoreBackup -BackupPath "~/myTech.Today/hosts/backups/hosts.backup.2025-01-21_143022"
     Restore from specific backup.
 
 .NOTES
     Name:           hosts.ps1
     Author:         myTech.Today
-    Version:        1.0.0
+    Version:        2.0.0
     DateCreated:    2025-11-21
-    LastModified:   2025-11-21
-    Requires:       PowerShell 5.1 or later
-                    Administrator privileges
-    
+    LastModified:   2025-12-14
+    Requires:       PowerShell 7.0 or later (PowerShell Core for cross-platform)
+                    Elevated privileges (Administrator on Windows, root on macOS/Linux)
+
+    Platforms:      Windows, macOS, Linux
+
     Changelog:
-    1.0.0 - Initial release
+    2.0.0 - Cross-platform support for Windows, macOS, and Linux
+    1.0.0 - Initial release (Windows-only)
 
 .LINK
     https://github.com/mytech-today-now/hosts/
@@ -89,14 +99,45 @@ param(
     [switch]$Force
 )
 
+# PowerShell 7+ Version Check - myTech.Today standard
+$script:PS7ContinueOnPS51 = $true  # Allow running on PS 5.1 with warning
+$script:PS7Silent = $false
+$script:_RepoRoot = $PSScriptRoot
+while ($script:_RepoRoot -and -not (Test-Path (Join-Path $script:_RepoRoot 'scripts\Require-PowerShell7.ps1'))) {
+    $script:_RepoRoot = Split-Path $script:_RepoRoot -Parent
+}
+if ($script:_RepoRoot -and (Test-Path (Join-Path $script:_RepoRoot 'scripts\Require-PowerShell7.ps1'))) {
+    . (Join-Path $script:_RepoRoot 'scripts\Require-PowerShell7.ps1')
+}
+
 #region Script Variables
 
-$script:ScriptVersion = "1.0.0"
+$script:ScriptVersion = "2.0.0"
 $script:HostsFileUrl = "https://someonewhocares.org/hosts/hosts"
-$script:HostsFilePath = "$env:SystemRoot\System32\drivers\etc\hosts"
-$script:BackupDirectory = "$env:USERPROFILE\myTech.Today\hosts\backups"
 $script:MaxBackups = 10
 $script:CustomSectionMarker = "# === Custom Host Entries (Preserved by myTech.Today hosts.ps1) ==="
+
+# Cross-platform path detection
+# Use $IsWindows automatic variable (PowerShell 7+) to determine hosts file location
+if ($IsWindows) {
+    $script:HostsFilePath = Join-Path $env:WINDIR 'System32\drivers\etc\hosts'
+    $script:BackupDirectory = Join-Path $env:USERPROFILE 'myTech.Today\hosts\backups'
+    $script:PlatformName = "Windows"
+} elseif ($IsMacOS) {
+    $script:HostsFilePath = '/etc/hosts'
+    $script:BackupDirectory = Join-Path $HOME 'myTech.Today/hosts/backups'
+    $script:PlatformName = "macOS"
+} elseif ($IsLinux) {
+    $script:HostsFilePath = '/etc/hosts'
+    $script:BackupDirectory = Join-Path $HOME 'myTech.Today/hosts/backups'
+    $script:PlatformName = "Linux"
+} else {
+    # Fallback for older PowerShell versions (Windows PowerShell 5.1)
+    # In Windows PowerShell 5.1, $IsWindows is not defined, so we assume Windows
+    $script:HostsFilePath = Join-Path $env:SystemRoot 'System32\drivers\etc\hosts'
+    $script:BackupDirectory = Join-Path $env:USERPROFILE 'myTech.Today\hosts\backups'
+    $script:PlatformName = "Windows (Legacy)"
+}
 
 # Suppress progress bars
 $script:OriginalProgressPreference = $ProgressPreference
@@ -137,17 +178,92 @@ catch {
 
 #region Helper Functions
 
+function Get-HostsFilePath {
+    <#
+    .SYNOPSIS
+        Returns the path to the system hosts file based on the current platform.
+    .DESCRIPTION
+        Cross-platform function that returns the correct hosts file location:
+        - Windows: $env:WINDIR\System32\drivers\etc\hosts
+        - macOS/Linux: /etc/hosts
+    .OUTPUTS
+        [string] The path to the hosts file.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param()
+
+    return $script:HostsFilePath
+}
+
+function Test-ElevatedPrivilege {
+    <#
+    .SYNOPSIS
+        Checks if the script is running with elevated privileges (cross-platform).
+    .DESCRIPTION
+        On Windows: Checks for Administrator privileges.
+        On macOS/Linux: Checks if running as root (UID 0).
+    .OUTPUTS
+        [bool] True if running with elevated privileges, false otherwise.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param()
+
+    if ($IsWindows -or (-not $IsWindows -and -not $IsMacOS -and -not $IsLinux)) {
+        # Windows or Windows PowerShell 5.1 (where $IsWindows is not defined)
+        try {
+            $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
+            $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
+            return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+        }
+        catch {
+            Write-Log "Failed to check Windows admin privileges: $_" -Level WARN
+            return $false
+        }
+    }
+    else {
+        # macOS or Linux - check if running as root (UID 0)
+        try {
+            $uid = & id -u 2>$null
+            return ($uid -eq "0")
+        }
+        catch {
+            Write-Log "Failed to check Unix root privileges: $_" -Level WARN
+            return $false
+        }
+    }
+}
+
+function Get-ElevationInstructions {
+    <#
+    .SYNOPSIS
+        Returns platform-specific instructions for running with elevated privileges.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param()
+
+    if ($IsWindows -or (-not $IsWindows -and -not $IsMacOS -and -not $IsLinux)) {
+        return "Please run PowerShell as Administrator and try again."
+    }
+    elseif ($IsMacOS -or $IsLinux) {
+        return "Please run with 'sudo pwsh' or as root and try again."
+    }
+    else {
+        return "Please run with elevated privileges and try again."
+    }
+}
+
+# Alias for backwards compatibility
 function Test-AdministratorPrivilege {
     <#
     .SYNOPSIS
-        Checks if the script is running with administrator privileges.
+        Alias for Test-ElevatedPrivilege for backwards compatibility.
     #>
     [CmdletBinding()]
     param()
-
-    $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
-    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    return Test-ElevatedPrivilege
 }
 
 function New-HostsBackup {
@@ -481,18 +597,62 @@ function Update-HostsFile {
 function Invoke-DNSFlush {
     <#
     .SYNOPSIS
-        Flushes the DNS cache to apply changes immediately.
+        Flushes the DNS cache to apply changes immediately (cross-platform).
+    .DESCRIPTION
+        Platform-specific DNS cache flush:
+        - Windows: Uses 'ipconfig /flushdns'
+        - macOS: Uses 'dscacheutil -flushcache' and 'killall -HUP mDNSResponder'
+        - Linux: Uses 'systemd-resolve --flush-caches' or 'resolvectl flush-caches'
     #>
     [CmdletBinding()]
     param()
 
     try {
         Write-Host "[INFO] Flushing DNS cache..." -ForegroundColor Cyan
-        Write-Log "Executing: ipconfig /flushdns" -Level INFO
 
-        & ipconfig /flushdns 2>&1 | Out-Null
+        $success = $false
 
-        if ($LASTEXITCODE -eq 0) {
+        if ($IsWindows -or (-not $IsWindows -and -not $IsMacOS -and -not $IsLinux)) {
+            # Windows or Windows PowerShell 5.1
+            Write-Log "Executing: ipconfig /flushdns" -Level INFO
+            & ipconfig /flushdns 2>&1 | Out-Null
+            $success = ($LASTEXITCODE -eq 0)
+        }
+        elseif ($IsMacOS) {
+            # macOS - requires killing mDNSResponder
+            Write-Log "Executing: dscacheutil -flushcache && killall -HUP mDNSResponder" -Level INFO
+            & dscacheutil -flushcache 2>&1 | Out-Null
+            & killall -HUP mDNSResponder 2>&1 | Out-Null
+            # macOS commands don't always return meaningful exit codes
+            $success = $true
+        }
+        elseif ($IsLinux) {
+            # Linux - try systemd-resolve first, then resolvectl
+            Write-Log "Executing: systemd-resolve --flush-caches (or resolvectl)" -Level INFO
+
+            # Try systemd-resolve first (older systems)
+            if (Get-Command 'systemd-resolve' -ErrorAction SilentlyContinue) {
+                & systemd-resolve --flush-caches 2>&1 | Out-Null
+                $success = ($LASTEXITCODE -eq 0)
+            }
+            # Try resolvectl (newer systems)
+            elseif (Get-Command 'resolvectl' -ErrorAction SilentlyContinue) {
+                & resolvectl flush-caches 2>&1 | Out-Null
+                $success = ($LASTEXITCODE -eq 0)
+            }
+            # Try nscd (Name Service Cache Daemon)
+            elseif (Get-Command 'nscd' -ErrorAction SilentlyContinue) {
+                & nscd -i hosts 2>&1 | Out-Null
+                $success = ($LASTEXITCODE -eq 0)
+            }
+            else {
+                Write-Log "No DNS cache flush utility found on this Linux system" -Level WARN
+                Write-Host "[WARN] DNS cache flush utility not found - changes may require a restart" -ForegroundColor Yellow
+                return $true  # Don't fail the script for this
+            }
+        }
+
+        if ($success) {
             Write-Log "DNS cache flushed successfully" -Level INFO
             Write-Host "[OK] DNS cache flushed successfully" -ForegroundColor Green
             return $true
@@ -567,23 +727,24 @@ function Restore-HostsFile {
 try {
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host "  Windows Hosts File Manager v$script:ScriptVersion" -ForegroundColor Cyan
-    Write-Host "  myTech.Today" -ForegroundColor Cyan
+    Write-Host "  Hosts File Manager v$script:ScriptVersion" -ForegroundColor Cyan
+    Write-Host "  myTech.Today ($script:PlatformName)" -ForegroundColor Cyan
     Write-Host "========================================" -ForegroundColor Cyan
     Write-Host ""
 
-    Write-Log "Script started - Version: $script:ScriptVersion" -Level INFO
+    Write-Log "Script started - Version: $script:ScriptVersion, Platform: $script:PlatformName" -Level INFO
+    Write-Host "[INFO] Hosts file: $script:HostsFilePath" -ForegroundColor Cyan
 
-    # Check administrator privileges
-    if (-not (Test-AdministratorPrivilege)) {
-        Write-Host "[FAIL] This script requires administrator privileges" -ForegroundColor Red
-        Write-Host "[INFO] Please run PowerShell as Administrator and try again" -ForegroundColor Yellow
-        Write-Log "Script terminated - Administrator privileges required" -Level ERROR
+    # Check elevated privileges (Administrator on Windows, root on macOS/Linux)
+    if (-not (Test-ElevatedPrivilege)) {
+        Write-Host "[FAIL] This script requires elevated privileges to modify the hosts file" -ForegroundColor Red
+        Write-Host "[INFO] $(Get-ElevationInstructions)" -ForegroundColor Yellow
+        Write-Log "Script terminated - Elevated privileges required on $script:PlatformName" -Level ERROR
         exit 1
     }
 
-    Write-Host "[OK] Running with administrator privileges" -ForegroundColor Green
-    Write-Log "Administrator privileges verified" -Level INFO
+    Write-Host "[OK] Running with elevated privileges" -ForegroundColor Green
+    Write-Log "Elevated privileges verified" -Level INFO
 
     # Handle BackupOnly parameter
     if ($BackupOnly) {
