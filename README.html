@@ -184,6 +184,10 @@
             <strong>⚠️ Important:</strong> This script requires elevated privileges to modify the hosts file. On Windows, run as Administrator. On macOS/Linux, use <code>sudo pwsh</code>.
         </div>
 
+        <h3>Set Execution Policy</h3>
+        <p>Before running the script for the first time, set the execution policy to allow scripts to run:</p>
+        <pre><code>Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted</code></pre>
+
         <h2>📖 Usage</h2>
 
         <h3>Basic Update</h3>
@@ -366,7 +370,7 @@
         <ul>
             <li><strong>Windows:</strong> Ensure PowerShell is running as Administrator</li>
             <li><strong>macOS/Linux:</strong> Run with <code>sudo pwsh</code></li>
-            <li>Check PowerShell execution policy: <code>Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</code></li>
+            <li>Check PowerShell execution policy: <code>Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted</code></li>
         </ul>
 
         <h3>Changes Not Taking Effect</h3>

@@ -36,6 +36,10 @@
     Skip confirmation prompts and bypass up-to-date check (force update even if already current).
 
 .EXAMPLE
+    Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted
+    Set the execution policy to allow running scripts (run once before first use)
+
+.EXAMPLE
     .\hosts.ps1
     Update hosts file with latest blocking rules.
 
@@ -465,12 +469,18 @@ function Get-CustomHostEntries {
     try {
         if (-not (Test-Path $script:HostsFilePath)) {
             Write-Log "Hosts file not found: $script:HostsFilePath" -Level WARN
-            return @()
+            return ,@()
         }
 
         $hostsContent = Get-Content -Path $script:HostsFilePath -Raw
         $customEntries = @()
         $inCustomSection = $false
+
+        # Guard: empty or zero-byte hosts file means no custom entries to preserve
+        if ([string]::IsNullOrEmpty($hostsContent)) {
+            Write-Log "Hosts file is empty - no custom entries to preserve" -Level WARN
+            return ,@()
+        }
 
         # Split content into lines
         $lines = $hostsContent -split "`r?`n"
@@ -503,7 +513,8 @@ function Get-CustomHostEntries {
             Write-Host "[INFO] Found $($customEntries.Count) custom host entries" -ForegroundColor Cyan
         }
 
-        return $customEntries
+        # Comma operator preserves array semantics across function return (prevents unwrapping to $null when empty)
+        return ,$customEntries
     }
     catch {
         Write-Log "Failed to extract custom entries: $_" -Level ERROR
@@ -521,12 +532,17 @@ function Merge-HostsContent {
         [Parameter(Mandatory = $true)]
         [string]$BlockingRules,
 
-        [Parameter(Mandatory = $true)]
-        [array]$CustomEntries
+        [Parameter(Mandatory = $false)]
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [array]$CustomEntries = @()
     )
 
     try {
         Write-Host "[INFO] Merging blocking rules with custom entries..." -ForegroundColor Cyan
+
+        # Normalise null to empty so .Count is always safe
+        if ($null -eq $CustomEntries) { $CustomEntries = @() }
 
         # Start with blocking rules
         $mergedContent = $BlockingRules
@@ -563,30 +579,80 @@ function Merge-HostsContent {
 function Update-HostsFile {
     <#
     .SYNOPSIS
-        Updates the Windows hosts file with merged content.
+        Updates the system hosts file with merged content using an atomic write + retry strategy.
+    .DESCRIPTION
+        Writes to a sibling temp file first, then performs an atomic replace so the original
+        hosts file is preserved if the destination is locked by another process (e.g. AV, DNS
+        Client). Retries transient IO errors and verifies post-write size before declaring success.
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Content
+        [AllowEmptyString()]
+        [string]$Content,
+
+        [Parameter(Mandatory = $false)]
+        [int]$MaxRetries = 3,
+
+        [Parameter(Mandatory = $false)]
+        [int]$RetryDelayMs = 750
     )
 
     try {
         Write-Host "[INFO] Updating hosts file..." -ForegroundColor Cyan
 
-        # Write content to hosts file
-        Set-Content -Path $script:HostsFilePath -Value $Content -Force -Encoding ASCII
+        if ([string]::IsNullOrEmpty($Content)) {
+            throw "Refusing to write empty content to hosts file"
+        }
 
-        # Verify write operation
-        if (Test-Path $script:HostsFilePath) {
-            $fileSize = (Get-Item $script:HostsFilePath).Length
-            Write-Log "Hosts file updated successfully (Size: $fileSize bytes)" -Level INFO
-            Write-Host "[OK] Hosts file updated successfully" -ForegroundColor Green
-            return $true
+        $expectedBytes = [System.Text.Encoding]::ASCII.GetByteCount($Content)
+        $tempFile = "$script:HostsFilePath.mtt.tmp"
+        $lastError = $null
+
+        for ($attempt = 1; $attempt -le $MaxRetries; $attempt++) {
+            try {
+                # Write to sibling temp file first (same volume so File.Replace can be atomic)
+                [System.IO.File]::WriteAllText($tempFile, $Content, [System.Text.Encoding]::ASCII)
+
+                $tempSize = (Get-Item -LiteralPath $tempFile).Length
+                if ($tempSize -lt $expectedBytes) {
+                    throw "Temp write incomplete (got $tempSize bytes, expected at least $expectedBytes)"
+                }
+
+                # Atomic replace: original hosts file is left intact if this throws
+                if (Test-Path -LiteralPath $script:HostsFilePath) {
+                    [System.IO.File]::Replace($tempFile, $script:HostsFilePath, $null)
+                }
+                else {
+                    [System.IO.File]::Move($tempFile, $script:HostsFilePath)
+                }
+
+                $finalSize = (Get-Item -LiteralPath $script:HostsFilePath).Length
+                if ($finalSize -lt $expectedBytes) {
+                    throw "Post-write size verification failed (got $finalSize bytes, expected at least $expectedBytes)"
+                }
+
+                Write-Log "Hosts file updated successfully (Size: $finalSize bytes, attempt $attempt/$MaxRetries)" -Level INFO
+                Write-Host "[OK] Hosts file updated successfully ($finalSize bytes)" -ForegroundColor Green
+                return $true
+            }
+            catch {
+                $lastError = $_
+                Write-Log "Hosts write attempt $attempt of $MaxRetries failed: $($_.Exception.Message)" -Level WARNING
+                Write-Host "[WARN] Hosts write attempt $attempt failed: $($_.Exception.Message)" -ForegroundColor Yellow
+
+                # Best-effort cleanup of orphan temp file before next attempt
+                if (Test-Path -LiteralPath $tempFile) {
+                    Remove-Item -LiteralPath $tempFile -Force -ErrorAction SilentlyContinue
+                }
+
+                if ($attempt -lt $MaxRetries) {
+                    Start-Sleep -Milliseconds $RetryDelayMs
+                }
+            }
         }
-        else {
-            throw "Hosts file not found after write operation"
-        }
+
+        throw "Failed to update hosts file after $MaxRetries attempts. Last error: $($lastError.Exception.Message). The original hosts file has been left untouched; use -RestoreBackup if needed."
     }
     catch {
         Write-Log "Failed to update hosts file: $_" -Level ERROR

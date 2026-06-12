@@ -1,6 +1,9 @@
 # Windows Hosts File Manager - .gitignore
 # Generated for myTech.Today PowerShell Scripts
 
+ai-prompts/
+.augment/
+
 # ============================================
 # Backup Files
 # ============================================
